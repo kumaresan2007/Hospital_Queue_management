@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Queue Management System | DSA Mini Project</title>
+    <!-- Google Fonts for Modern Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Top Toast Notification Container -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <!-- Header Section -->
+    <header class="hospital-header">
+        <div class="header-container">
+            <div class="brand-wrapper">
+                <div class="brand-icon">
+                    <!-- Medical Cross / Hospital Icon -->
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                        <path d="M12 7v6"/>
+                        <path d="M9 10h6"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="hospital-title">Hospital Queue Management System</h1>
+                    <p class="hospital-subtitle">Patient Registration &amp; Queue Monitoring</p>
+                </div>
+            </div>
+            
+            <div class="header-badges">
+                <span class="dsa-badge">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                    </svg>
+                    DSA Project: Queue (FIFO)
+                </span>
+                <span class="live-clock" id="live-clock">--:--:--</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-content">
+
+        <!-- Summary Statistics Cards -->
+        <section class="stats-grid">
+            <!-- Card 1: Total Patients Registered -->
+            <div class="stat-card">
+                <div class="stat-icon-wrapper icon-blue">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-title">Total Patients Registered</span>
+                    <h3 class="stat-number" id="stat-total-registered">0</h3>
+                    <span class="stat-detail">Lifetime Registrations</span>
+                </div>
+            </div>
+
+            <!-- Card 2: Patients Waiting -->
+            <div class="stat-card">
+                <div class="stat-icon-wrapper icon-orange">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-title">Patients Waiting</span>
+                    <h3 class="stat-number" id="stat-waiting">0</h3>
+                    <span class="stat-detail text-orange">Current Queue Size</span>
+                </div>
+            </div>
+
+            <!-- Card 3: Patients Served -->
+            <div class="stat-card">
+                <div class="stat-icon-wrapper icon-green">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-title">Patients Served</span>
+                    <h3 class="stat-number" id="stat-served">0</h3>
+                    <span class="stat-detail text-green">Successfully Consulted</span>
+                </div>
+            </div>
+
+            <!-- Card 4: Next Patient Number -->
+            <div class="stat-card highlight-card">
+                <div class="stat-icon-wrapper icon-teal">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-title">Next Patient Number</span>
+                    <h3 class="stat-number text-teal" id="stat-next-token">—</h3>
+                    <span class="stat-detail" id="stat-next-label">Front of the Queue</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Top Action & Demonstration Bar -->
+        <section class="action-bar-card">
+            <div class="action-bar-left">
+                <button id="serve-next-btn" class="btn btn-serve-primary" onclick="serveNextPatient()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                    Serve Next Patient (Dequeue)
+                </button>
+                <div class="next-serving-preview" id="quick-serving-info">
+                    <span class="preview-label">Up Next:</span>
+                    <span class="preview-value" id="quick-next-name">No patient waiting</span>
+                </div>
+            </div>
+
+            <div class="action-bar-right">
+                <button class="btn btn-outline" onclick="loadSampleData()" title="Pre-fill 4 realistic patients to test FIFO">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    Load Sample Demo
+                </button>
+                <button class="btn btn-outline-danger" onclick="confirmClearQueue()" title="Clear all waiting patients">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    Clear Queue
+                </button>
+                <button class="btn btn-ghost" onclick="confirmResetAll()" title="Reset all records and counters">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 2v6h6"></path>
+                        <path d="M21 12A9 9 0 0 0 6 5.3L3 8"></path>
+                        <path d="M21 22v-6h-6"></path>
+                        <path d="M3 12a9 9 0 0 0 15 6.7l3-2.7"></path>
+                    </svg>
+                    Reset System
+                </button>
+            </div>
+        </section>
+
+        <!-- Visual Queue Strip (FIFO Visualizer) -->
+        <section class="visualizer-container">
+            <div class="visualizer-header">
+                <div class="visualizer-title-wrap">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 17l6-6-6-6"></path>
+                        <path d="M12 19h8"></path>
+                    </svg>
+                    <h3>Live Queue Visualizer (First In, First Out)</h3>
+                </div>
+                <span class="queue-status-tag" id="visualizer-summary">Queue Empty (0 items)</span>
+            </div>
+            
+            <div class="queue-track-wrapper">
+                <div class="queue-end-label front-label">
+                    <span class="badge-front">FRONT (Head)</span>
+                    <small>Exit: Dequeue ↰</small>
+                </div>
+
+                <div class="queue-stream" id="queue-stream">
+                    <!-- Queue nodes will be rendered dynamically here -->
+                    <div class="queue-empty-indicator">Queue is currently empty. Register patients below to populate queue.</div>
+                </div>
+
+                <div class="queue-end-label rear-label">
+                    <span class="badge-rear">REAR (Tail)</span>
+                    <small>Entry: Enqueue ↳</small>
+                </div>
+            </div>
+        </section>
+
+        <!-- Two Column Section: Patient Registration + Quick Search -->
+        <div class="content-grid">
+            <!-- Column 1: Patient Registration Form -->
+            <section class="card form-card">
+                <div class="card-header">
+                    <div class="card-title-wrap">
+                        <div class="card-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="8.5" cy="7" r="4"></circle>
+                                <line x1="20" y1="8" x2="20" y2="14"></line>
+                                <line x1="23" y1="11" x2="17" y2="11"></line>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="card-title">Patient Registration</h2>
+                            <p class="card-subtitle">Enqueue new patient to the rear of the queue</p>
+                        </div>
+                    </div>
+                    <span class="token-preview-tag" id="token-preview-badge">Next Token: #101</span>
+                </div>
+
+                <form id="registration-form" onsubmit="registerPatient(event)" novalidate>
+                    <!-- Row 1: Generated ID (Read-only) -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="patient-id">Patient ID <span class="auto-badge">(Auto-Generated)</span></label>
+                            <div class="input-with-icon">
+                                <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                                    <line x1="7" y1="8" x2="17" y2="8"></line>
+                                    <line x1="7" y1="12" x2="13" y2="12"></line>
+                                </svg>
+                                <input type="text" id="patient-id" class="form-control read-only-input" readonly value="PID-101">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="token-number">Assigned Token <span class="auto-badge">(Queue Order)</span></label>
+                            <div class="input-with-icon">
+                                <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <text x="12" y="16" text-anchor="middle" font-size="10" font-weight="bold" fill="currentColor">#</text>
+                                </svg>
+                                <input type="text" id="token-number" class="form-control read-only-input" readonly value="#101">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Name & Age -->
+                    <div class="form-row">
+                        <div class="form-group flex-2">
+                            <label for="patient-name">Patient Full Name <span class="required-star">*</span></label>
+                            <div class="input-with-icon">
+                                <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                <input type="text" id="patient-name" class="form-control" placeholder="e.g. John Doe" required autocomplete="off">
+                            </div>
+                            <span class="field-error" id="name-error">Please enter the patient's full name.</span>
+                        </div>
+
+                        <div class="form-group flex-1">
+                            <label for="patient-age">Age (Years) <span class="required-star">*</span></label>
+                            <div class="input-with-icon">
+                                <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                                <input type="number" id="patient-age" class="form-control" placeholder="e.g. 32" min="1" max="120" required>
+                            </div>
+                            <span class="field-error" id="age-error">Please enter a valid age (1-120).</span>
+                        </div>
+                    </div>
+
+                    <!-- Row 3: Gender & Reason for Visit -->
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label for="patient-gender">Gender <span class="required-star">*</span></label>
+                            <div class="input-with-icon">
+                                <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M12 16v-8"></path>
+                                    <path d="M8 12h8"></path>
+                                </svg>
+                                <select id="patient-gender" class="form-control" required>
+                                    <option value="" disabled selected>Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <span class="field-error" id="gender-error">Please select a gender.</span>
+                        </div>
+
+                        <div class="form-group flex-2">
+                            <label for="patient-reason">Reason for Visit <span class="required-star">*</span></label>
+                            <div class="input-with-icon">
+                                <svg class="field-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                </svg>
+                                <input type="text" id="patient-reason" class="form-control" list="common-reasons" placeholder="e.g. High Fever &amp; Cough" required autocomplete="off">
+                                <datalist id="common-reasons">
+                                    <option value="General Health Checkup">
+                                    <option value="Viral Fever & Cold">
+                                    <option value="Chest Pain / Cardiology">
+                                    <option value="Orthopedic Joint Pain">
+                                    <option value="Skin Rash / Dermatology">
+                                    <option value="Dental Pain">
+                                    <option value="Pediatric Consultation">
+                                    <option value="Emergency Dressing / Wound">
+                                </datalist>
+                            </div>
+                            <span class="field-error" id="reason-error">Please enter the reason for visit.</span>
+                        </div>
+                    </div>
+
+                    <!-- Submit & Reset Action -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-submit">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            Register Patient (Enqueue)
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                            Clear Form
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Column 2: Educational DSA Info & Quick Operations -->
+            <section class="card dsa-explainer-card">
+                <div class="card-header">
+                    <div class="card-title-wrap">
+                        <div class="card-icon icon-teal">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="card-title">How Queue Works (FIFO)</h2>
+                            <p class="card-subtitle">Essential DSA concept for Viva &amp; Demo</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dsa-points">
+                    <div class="dsa-point-item">
+                        <div class="dsa-point-badge">1</div>
+                        <div class="dsa-point-text">
+                            <strong>FIFO Principle:</strong>
+                            <p><strong>First In, First Out</strong> — The patient who registers first is served first. Just like a real hospital queue!</p>
+                        </div>
+                    </div>
+
+                    <div class="dsa-point-item">
+                        <div class="dsa-point-badge">2</div>
+                        <div class="dsa-point-text">
+                            <strong>Enqueue Operation (Add to Rear):</strong>
+                            <p>When you click <em>Register Patient</em>, <code>queue.push(patient)</code> inserts the new record at the <strong>rear/end</strong>.</p>
+                        </div>
+                    </div>
+
+                    <div class="dsa-point-item">
+                        <div class="dsa-point-badge">3</div>
+                        <div class="dsa-point-text">
+                            <strong>Dequeue Operation (Remove from Front):</strong>
+                            <p>When you click <em>Serve Next</em>, <code>queue.shift()</code> extracts the patient at the <strong>front/index 0</strong>.</p>
+                        </div>
+                    </div>
+
+                    <div class="dsa-point-item">
+                        <div class="dsa-point-badge">4</div>
+                        <div class="dsa-point-text">
+                            <strong>Front Pointer:</strong>
+                            <p><code>queue[0]</code> points to the patient highlighted with light blue in the table below.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dsa-footer-box">
+                    <span class="dsa-chip">Array Method: push() &amp; shift()</span>
+                    <span class="dsa-chip">Front: O(1) peek</span>
+                    <span class="dsa-chip">No Reordering Allowed</span>
+                </div>
+            </section>
+        </div>
+
+        <!-- Section: Waiting Queue Table -->
+        <section class="card table-card" id="waiting-queue-section">
+            <div class="table-header-bar">
+                <div>
+                    <div class="table-title-wrap">
+                        <div class="section-indicator orange-indicator"></div>
+                        <h2 class="table-section-title">Current Waiting Queue</h2>
+                        <span class="badge-count" id="waiting-count-badge">0 Patients</span>
+                    </div>
+                    <p class="section-desc">Patients waiting in FIFO order. The first patient is currently next in line.</p>
+                </div>
+
+                <!-- Search and Filter Bar -->
+                <div class="search-filter-controls">
+                    <div class="filter-group">
+                        <label for="status-filter-select" class="filter-label">Filter Status:</label>
+                        <select id="status-filter-select" class="filter-select" onchange="filterPatients()">
+                            <option value="all">All (Waiting &amp; Served)</option>
+                            <option value="waiting" selected>⏳ Waiting Only</option>
+                            <option value="served">✓ Served Only</option>
+                        </select>
+                    </div>
+                    <div class="search-box">
+                        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" id="queue-search-input" class="search-input" placeholder="Search by name or ID (e.g. Aarav, PID-101)..." oninput="searchPatient()">
+                        <button class="clear-search-btn" id="clear-search-btn" onclick="clearSearch()" title="Clear search">×</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Responsive Table Container -->
+            <div class="table-responsive">
+                <table class="hospital-table" id="waiting-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 110px;">Token No.</th>
+                            <th>Patient Name</th>
+                            <th style="width: 80px;">Age</th>
+                            <th style="width: 100px;">Gender</th>
+                            <th>Reason for Visit</th>
+                            <th style="width: 170px;">Status</th>
+                            <th style="width: 120px; text-align: center;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="waiting-queue-body">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+
+                <!-- Empty State Message for Queue -->
+                <div id="queue-empty-state" class="empty-state">
+                    <div class="empty-icon-wrap">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                    </div>
+                    <h3>No Patients Waiting in Queue</h3>
+                    <p>Register a new patient using the form above or click <strong>Load Sample Demo</strong> to simulate real patient traffic.</p>
+                    <button class="btn btn-outline" onclick="loadSampleData()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                        Load Sample Patients
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Patient History (Served Patients) -->
+        <section class="card table-card" id="history-section">
+            <div class="table-header-bar">
+                <div>
+                    <div class="table-title-wrap">
+                        <div class="section-indicator green-indicator"></div>
+                        <h2 class="table-section-title">Patient Consultation History</h2>
+                        <span class="badge-count green-badge-count" id="history-count-badge">0 Served</span>
+                    </div>
+                    <p class="section-desc">Record of all patients who have been called and served via Dequeue.</p>
+                </div>
+
+                <!-- History Filter Control -->
+                <div class="search-filter-controls">
+                    <div class="filter-group">
+                        <label for="history-filter-select" class="filter-label">Filter:</label>
+                        <select id="history-filter-select" class="filter-select" onchange="filterPatients()">
+                            <option value="all">All Served Patients</option>
+                            <option value="today">Today's Consultations</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Table -->
+            <div class="table-responsive">
+                <table class="hospital-table" id="history-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 110px;">Token No.</th>
+                            <th>Patient Name</th>
+                            <th style="width: 80px;">Age</th>
+                            <th style="width: 100px;">Gender</th>
+                            <th>Reason for Visit</th>
+                            <th style="width: 170px;">Status</th>
+                            <th style="width: 120px; text-align: center;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-queue-body">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+
+                <!-- Empty State Message for History -->
+                <div id="history-empty-state" class="empty-state">
+                    <div class="empty-icon-wrap icon-green-dim">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                    </div>
+                    <h3>No Patients Served Yet</h3>
+                    <p>When you click <strong>Serve Next Patient</strong>, the patient at the front of the queue will appear here as completed.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Patient Details Modal Dialog -->
+    <div id="details-modal" class="modal-backdrop" onclick="handleBackdropClick(event)">
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-patient-name">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <div class="modal-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="8.5" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="modal-title" id="modal-patient-name">Patient Details</h3>
+                        <p class="modal-subtitle" id="modal-patient-id">PID-000</p>
+                    </div>
+                </div>
+                <button class="modal-close-btn" onclick="closeModal()" title="Close dialog">×</button>
+            </div>
+
+            <div class="modal-body" id="modal-content">
+                <!-- Injected via JavaScript -->
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal Dialog -->
+    <div id="confirm-modal" class="modal-backdrop" onclick="handleBackdropClick(event)">
+        <div class="modal-card modal-confirm-card" role="dialog" aria-modal="true">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <div class="modal-icon icon-orange">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="modal-title" id="confirm-modal-title">Confirm Action</h3>
+                        <p class="modal-subtitle">Please verify before proceeding</p>
+                    </div>
+                </div>
+                <button class="modal-close-btn" onclick="closeConfirmModal()">×</button>
+            </div>
+
+            <div class="modal-body">
+                <p id="confirm-modal-message" class="confirm-text">Are you sure you want to proceed?</p>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+                <button id="confirm-modal-action-btn" class="btn btn-danger" onclick="executeConfirmedAction()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="hospital-footer">
+        <div class="footer-container">
+            <div class="footer-left">
+                <strong>College DSA Mini Project:</strong> Queue Data Structure Demonstration (FIFO)
+            </div>
+            <div class="footer-right">
+                <span>Frontend: HTML5, CSS3, Vanilla JS</span>
+                <span>•</span>
+                <span>In-Memory Storage</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript File -->
+    <script src="script.js"></script>
+</body>
+</html>
